@@ -34,7 +34,7 @@ class MyimageResult {
 /// )
 /// ```
 
-class Myimage extends StatelessWidget {
+class MyImage extends StatelessWidget {
   final List<MyimageResult>? images;
   final void Function(List<MyimageResult> results)? onImagesChanged;
   final String? label;
@@ -47,7 +47,7 @@ class Myimage extends StatelessWidget {
   final void Function(int index, MyimageResult image)? onRemoveImage;
   final Widget Function(BuildContext context)? plusBuilder;
 
-  const Myimage({
+  const MyImage({
     super.key,
     this.images,
     this.onImagesChanged,

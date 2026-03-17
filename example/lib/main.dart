@@ -45,7 +45,7 @@ class _MyimageDemoState extends State<MyimageDemo> {
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const SizedBox(height: 8),
-          Myimage(
+          MyImage(
             images: _profileImages,
             maxImages: 1,
             onImagesChanged: (results) {
@@ -67,7 +67,7 @@ class _MyimageDemoState extends State<MyimageDemo> {
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const SizedBox(height: 8),
-          Myimage(
+          MyImage(
             images: _multiImages,
             onImagesChanged: (results) {
               setState(() => _multiImages = List<MyimageResult>.from(results));
@@ -107,7 +107,7 @@ class _MyimageDemoState extends State<MyimageDemo> {
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           const SizedBox(height: 8),
-          Myimage(
+          MyImage(
             images: _customImages,
             onImagesChanged: (results) {
               setState(() => _customImages = List<MyimageResult>.from(results));
