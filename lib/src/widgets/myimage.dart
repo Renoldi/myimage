@@ -155,7 +155,7 @@ class _MyImageState extends State<MyImage> {
                                   horizontal: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.35),
+                                  color: Colors.black.withValues(alpha: .35),
                                   borderRadius: BorderRadius.circular(6),
                                   border: Border.all(
                                     color: Colors.deepOrange,
@@ -236,7 +236,7 @@ class _MyImageState extends State<MyImage> {
                       width: 80,
                       height: 16,
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.35),
+                        color: Colors.black.withValues(alpha: 0.35),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Colors.deepOrange, width: 2),
                         boxShadow: [
@@ -312,28 +312,72 @@ class _MyImageState extends State<MyImage> {
     BuildContext context,
     MyimageProvider provider,
   ) async {
-    final source = await showDialog<String>(
+    final mountedBeforeDialog = mounted;
+    final messenger = mountedBeforeDialog
+        ? ScaffoldMessenger.of(context)
+        : null;
+    final source = await showModalBottomSheet<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(widget.maxImages == 1 ? 'Select Image' : 'Add Image'),
-        content: const Text('Select source'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, 'camera'),
-            child: const Text('Camera'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, 'gallery'),
-            child: const Text('Gallery'),
-          ),
-          if (widget.isDoc)
-            TextButton(
-              onPressed: () => Navigator.pop(context, 'doc'),
-              child: const Text('Document'),
-            ),
-        ],
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
+      builder: (dialogContext) {
+        return SafeArea(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              GestureDetector(
+                onTap: () => Navigator.pop(dialogContext, 'camera'),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    shape: BoxShape.circle,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    size: 32,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.pop(dialogContext, 'gallery'),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    shape: BoxShape.circle,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  child: const Icon(
+                    Icons.photo_library,
+                    size: 32,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
+              if (widget.isDoc)
+                GestureDetector(
+                  onTap: () => Navigator.pop(dialogContext, 'doc'),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      shape: BoxShape.circle,
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: const Icon(
+                      Icons.document_scanner,
+                      size: 32,
+                      color: Colors.deepOrange,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
+    if (!mounted) return;
     if (source == null) return;
     File? file;
     if (source == 'camera' || source == 'gallery') {
@@ -341,6 +385,7 @@ class _MyImageState extends State<MyImage> {
       final picked = await picker.pickImage(
         source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
       );
+      if (!mounted) return;
       if (picked != null) {
         file = File(picked.path);
       }
@@ -349,13 +394,15 @@ class _MyImageState extends State<MyImage> {
         isGalleryImportAllowed: true,
         noOfPages: 1,
       );
+      if (!mounted) return;
       if (scanned != null && scanned.isNotEmpty) {
         file = File(scanned.first);
       }
     }
-    if (!context.mounted) return;
+    if (!mounted) return;
     if (file != null) {
       final result = await MyimageResult.fromFile(file);
+      if (!mounted) return;
       int? uploadIdx;
       if (widget.maxImages == 1) {
         bool isNew =
@@ -386,7 +433,8 @@ class _MyImageState extends State<MyImage> {
         setState(() {
           _uploadingIndex = uploadIdx;
         });
-        await _uploadImageDio(context, provider, result, uploadIdx);
+        await _uploadImageDio(messenger, provider, result, uploadIdx);
+        if (!mounted) return;
         setState(() {
           _uploadingIndex = null;
         });
@@ -395,7 +443,7 @@ class _MyImageState extends State<MyImage> {
   }
 
   Future<void> _uploadImageDio(
-    BuildContext context,
+    ScaffoldMessengerState? messenger,
     MyimageProvider provider,
     MyimageResult image, [
     int? idx,
@@ -418,8 +466,9 @@ class _MyImageState extends State<MyImage> {
         provider.setUploadProgress(index, progress);
       },
     );
+    if (!mounted) return;
     if (response == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger?.showSnackBar(
         SnackBar(content: Text('Upload error: DioUtil upload failed')),
       );
       return;
@@ -457,18 +506,14 @@ class _MyImageState extends State<MyImage> {
         );
         provider.setUploadProgress(index, 1.0);
         widget.onImagesChanged?.call(List<MyimageResult>.from(provider.images));
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Upload successful!')));
+        messenger?.showSnackBar(SnackBar(content: Text('Upload successful!')));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger?.showSnackBar(
           SnackBar(content: Text('Upload failed: \\${response.statusCode}')),
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Upload error: \\${e}')));
+      messenger?.showSnackBar(SnackBar(content: Text('Upload error: \\$e')));
     }
   }
 }

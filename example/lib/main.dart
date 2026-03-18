@@ -1,7 +1,9 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:myimage/myimage.dart';
+import 'package:logger/logger.dart';
+
+final logger = Logger();
 
 void main() {
   runApp(MyimageExampleApp());
@@ -51,7 +53,7 @@ class _MyimageDemoState extends State<MyimageDemo> {
             onImagesChanged: (results) {
               setState(() => _profileImages = results);
               // Debug print for troubleshooting
-              print(
+              logger.i(
                 'Profile image changed: ${results.map((r) => r.link).toList()}',
               );
             },
@@ -80,6 +82,10 @@ class _MyimageDemoState extends State<MyimageDemo> {
               setState(() => _multiImages = results);
             },
             isDoc: true,
+            isDirectUpload: true,
+            uploadUrl:
+                'https://catbox.moe/user/api.php', // Direct image upload endpoint
+            uploadToken: '',
           ),
           if (_multiImages.isNotEmpty) ...[
             const SizedBox(height: 8),
