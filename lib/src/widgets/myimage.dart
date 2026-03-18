@@ -27,7 +27,7 @@ class MyImage extends StatefulWidget {
   final String uploadFailedMessage;
   final String uploadErrorMessage;
 
-  const MyImage({
+  MyImage({
     super.key,
     required this.images,
     this.onImagesChanged,
@@ -44,7 +44,12 @@ class MyImage extends StatefulWidget {
     this.uploadSuccessMessage = 'Upload successful!',
     this.uploadFailedMessage = 'Upload failed:',
     this.uploadErrorMessage = 'Upload error:',
-  });
+  }) {
+    assert(
+      isDirectUpload == false || (uploadUrl != null && uploadUrl!.isNotEmpty),
+      "For direct upload, uploadUrl must be provided and non-empty.",
+    );
+  }
 
   @override
   State<MyImage> createState() => _MyImageState();
@@ -100,26 +105,44 @@ class _MyImageState extends State<MyImage> {
                                           0,
                                         ),
                                       )
-                                    : CircleAvatar(
-                                        radius: 60,
-                                        backgroundColor: Colors.grey.shade300,
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: const [
-                                            Icon(
-                                              Icons.person,
-                                              size: 60,
-                                              color: Colors.grey,
-                                            ),
-                                            Icon(
-                                              Icons.camera_alt,
-                                              size: 24,
-                                              color: Colors.black54,
-                                            ),
-                                          ],
-                                        ),
-                                      ))
+                                    : (!widget.isDirectUpload &&
+                                              (widget.uploadUrl == null ||
+                                                  widget.uploadUrl!.isEmpty)
+                                          ? Container(
+                                              width: 120,
+                                              height: 120,
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.shade300,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: ClipOval(
+                                                child: Image.asset(
+                                                  'assets/default_image.png',
+                                                  fit: BoxFit.cover,
+                                                ),
+                                              ),
+                                            )
+                                          : CircleAvatar(
+                                              radius: 60,
+                                              backgroundColor:
+                                                  Colors.grey.shade300,
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: const [
+                                                  Icon(
+                                                    Icons.person,
+                                                    size: 60,
+                                                    color: Colors.grey,
+                                                  ),
+                                                  Icon(
+                                                    Icons.camera_alt,
+                                                    size: 24,
+                                                    color: Colors.black54,
+                                                  ),
+                                                ],
+                                              ),
+                                            )))
                               : (widget.imageBuilder != null
                                     ? SizedBox(
                                         width: 120,

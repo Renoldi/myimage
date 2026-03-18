@@ -84,6 +84,7 @@ class _MyimageDemoState extends State<MyimageDemo> {
             isDoc: true,
             isDirectUpload: true,
             uploadUrl:
+                // "",
                 'https://catbox.moe/user/api.php', // Direct image upload endpoint
             uploadToken: '',
           ),
