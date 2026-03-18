@@ -22,6 +22,10 @@ class MyImage extends StatefulWidget {
   final String? uploadUrl;
   final String? uploadToken;
   final bool isDirectUpload;
+  // Customizable upload messages
+  final String uploadSuccessMessage;
+  final String uploadFailedMessage;
+  final String uploadErrorMessage;
 
   const MyImage({
     super.key,
@@ -37,6 +41,9 @@ class MyImage extends StatefulWidget {
     this.uploadUrl,
     this.uploadToken,
     this.isDirectUpload = false,
+    this.uploadSuccessMessage = 'Upload successful!',
+    this.uploadFailedMessage = 'Upload failed:',
+    this.uploadErrorMessage = 'Upload error:',
   });
 
   @override
@@ -467,7 +474,7 @@ class _MyImageState extends State<MyImage> {
     if (!mounted) return;
     if (response == null) {
       messenger?.showSnackBar(
-        SnackBar(content: Text('Upload error: DioUtil upload failed')),
+        SnackBar(content: Text(widget.uploadErrorMessage)),
       );
       return;
     }
@@ -504,14 +511,22 @@ class _MyImageState extends State<MyImage> {
         );
         provider.setUploadProgress(index, 1.0);
         widget.onImagesChanged?.call(List<MyimageResult>.from(provider.images));
-        messenger?.showSnackBar(SnackBar(content: Text('Upload successful!')));
+        messenger?.showSnackBar(
+          SnackBar(content: Text(widget.uploadSuccessMessage)),
+        );
       } else {
         messenger?.showSnackBar(
-          SnackBar(content: Text('Upload failed: \\${response.statusCode}')),
+          SnackBar(
+            content: Text(
+              '${widget.uploadFailedMessage} ${response.statusCode}',
+            ),
+          ),
         );
       }
     } catch (e) {
-      messenger?.showSnackBar(SnackBar(content: Text('Upload error: \\$e')));
+      messenger?.showSnackBar(
+        SnackBar(content: Text('${widget.uploadErrorMessage} $e')),
+      );
     }
   }
 }
