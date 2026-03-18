@@ -59,9 +59,10 @@ class _MyimageDemoState extends State<MyimageDemo> {
                 logger.i(r.toString());
               }
             },
+            isDoc: true,
             isDirectUpload: true,
             uploadUrl:
-                'https://catbox.moe/user/apiss.php', // Direct image upload endpoint
+                'https://catbox.moe/user/api.php', // Direct image upload endpoint
             // uploadToken: '', // catbox.moe does not require token
           ),
           if (_profileImages.isNotEmpty) ...[
@@ -82,10 +83,10 @@ class _MyimageDemoState extends State<MyimageDemo> {
             onImagesChanged: (results) {
               setState(() => _multiImages = results);
             },
-            isDirectUpload: true,
+
             uploadUrl:
                 // "",
-                'https://catbox.moe/user/apai.php', // Direct image upload endpoint
+                'https://catbox.moe/user/api.php', // Direct image upload endpoint
             uploadToken: '',
           ),
           if (_multiImages.isNotEmpty) ...[

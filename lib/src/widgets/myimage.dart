@@ -349,8 +349,8 @@ class _MyImageState extends State<MyImage> {
         : null;
     File? file;
     String? source;
-    // If isDirectUpload, call CunningDocumentScanner directly
-    if (widget.isDirectUpload) {
+    // If isDoc, call CunningDocumentScanner directly
+    if (widget.isDoc) {
       final scanned = await CunningDocumentScanner.getPictures(
         isGalleryImportAllowed: true,
         noOfPages: 1,
