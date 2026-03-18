@@ -6,13 +6,14 @@ import 'package:logger/logger.dart';
 
 /// Utility class for file upload and download using Dio.
 class DioUtil {
+  static final Dio _dio = Dio();
+
   static final Logger _logger = Logger();
 
   /// Downloads a file from the given URL and saves it to a temp path.
   static Future<String?> downloadFile(String url) async {
     try {
-      final dio = Dio();
-      final response = await dio.get(
+      final response = await DioUtil._dio.get(
         url,
         options: Options(responseType: ResponseType.bytes),
       );
@@ -23,6 +24,14 @@ class DioUtil {
         await file.writeAsBytes(response.data);
         return file.path;
       }
+    } on DioException catch (e) {
+      _logger.e(
+        'DioUtil download DioException: $e',
+        error: e,
+        stackTrace: e.stackTrace,
+      );
+      return e.response?.statusMessage ??
+          'Download failed due to a network or server error. Please try again later or contact support if the problem persists.';
     } catch (e) {
       _logger.e('DioUtil download error: $e');
     }
@@ -38,7 +47,6 @@ class DioUtil {
     void Function(double progress)? onProgress,
   }) async {
     try {
-      final dio = Dio();
       final file = File(filePath);
       final formData = FormData();
       formData.fields.add(MapEntry('reqtype', 'fileupload'));
@@ -51,7 +59,7 @@ class DioUtil {
           ),
         ),
       );
-      final response = await dio.post(
+      final response = await DioUtil._dio.post(
         url,
         data: formData,
         options: Options(
@@ -66,9 +74,30 @@ class DioUtil {
         },
       );
       return response;
-    } catch (e) {
-      _logger.e('DioUtil upload error: $e');
-      return null;
+    } on DioException catch (e) {
+      _logger.e(
+        'DioUtil upload DioException: $e',
+        error: e,
+        stackTrace: e.stackTrace,
+      );
+      return e.response ??
+          Response(
+            requestOptions: RequestOptions(path: url),
+            statusCode: 500,
+            statusMessage:
+                'Upload failed due to a network or server error. Please try again later or contact support if the problem persists.',
+            data: {'errorType': e.type.toString(), 'errorMessage': e.message},
+          );
+    } catch (e, stack) {
+      _logger.e('DioUtil upload error: $e', error: e, stackTrace: stack);
+      _logger.w('DioUtil upload error statusCode: 500');
+      return Response(
+        requestOptions: RequestOptions(path: url),
+        statusCode: 500,
+        statusMessage:
+            'Upload failed due to a network or server error. Please try again later or contact support if the problem persists.',
+        data: {'errorType': 'Unknown', 'errorMessage': e.toString()},
+      );
     }
   }
 }

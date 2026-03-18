@@ -54,14 +54,14 @@ class _MyimageDemoState extends State<MyimageDemo> {
             onImagesChanged: (results) {
               setState(() => _profileImages = results);
               // Debug print for troubleshooting
-              logger.i(
-                'Profile image changed: ${results.map((r) => r.link).toList()}',
-              );
+              logger.i('Profile image changed:');
+              for (var r in results) {
+                logger.i(r.toString());
+              }
             },
-            isDoc: true,
-            // isDirectUpload: true,
-            // uploadUrl:
-            //     'https://catbox.moe/user/api.php', // Direct image upload endpoint
+            isDirectUpload: true,
+            uploadUrl:
+                'https://catbox.moe/user/apiss.php', // Direct image upload endpoint
             // uploadToken: '', // catbox.moe does not require token
           ),
           if (_profileImages.isNotEmpty) ...[
@@ -85,7 +85,7 @@ class _MyimageDemoState extends State<MyimageDemo> {
             isDirectUpload: true,
             uploadUrl:
                 // "",
-                'https://catbox.moe/user/api.php', // Direct image upload endpoint
+                'https://catbox.moe/user/apai.php', // Direct image upload endpoint
             uploadToken: '',
           ),
           if (_multiImages.isNotEmpty) ...[

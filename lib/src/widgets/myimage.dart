@@ -542,7 +542,7 @@ class _MyImageState extends State<MyImage> {
         messenger?.showSnackBar(
           SnackBar(
             content: Text(
-              '${widget.uploadFailedMessage} ${response.statusCode}',
+              '${widget.uploadFailedMessage} ${response.statusMessage ?? ''} ',
             ),
           ),
         );
