@@ -1,15 +1,59 @@
-# myimage
+# MyImage Flutter Plugin
 
-A new Flutter plugin project.
+Customizable image picker widget for profile and multi-image selection with plus button, custom image builder, and custom remove icon.
 
-## Getting Started
+## Features
 
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.dev/to/develop-plugins),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
+- Pick images from camera, gallery, or document scanner
+- Single or multi-image mode
+- Custom builder for images and plus button
+- Custom builder for remove icon
+- Internal state management
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Usage Example
 
+```dart
+import 'package:myimage/myimage.dart';
+
+MyImage(
+	images: images,
+	onImagesChanged: (results) {
+		setState(() => images = List<MyimageResult>.from(results));
+	},
+	maxImages: null, // unlimited
+	plusBuilder: (context) => Container(
+		width: 100,
+		height: 100,
+		decoration: BoxDecoration(
+			border: Border.all(color: Colors.orange, width: 2),
+			borderRadius: BorderRadius.circular(16),
+			color: Colors.yellow[100],
+		),
+		child: const Center(
+			child: Icon(Icons.star, color: Colors.orange, size: 40),
+		),
+	),
+	removeIconBuilder: (context, idx, image) => Container(
+		decoration: BoxDecoration(
+			shape: BoxShape.circle,
+			color: Colors.purple,
+			border: Border.all(color: Colors.white, width: 2),
+		),
+		padding: const EdgeInsets.all(4),
+		child: const Icon(Icons.delete, color: Colors.white, size: 20),
+	),
+)
+```
+
+## Parameters
+
+- `images`: List of selected images
+- `onImagesChanged`: Callback when images change
+- `maxImages`: Maximum images allowed (null = unlimited)
+- `imageBuilder`: Custom builder for each image
+- `plusBuilder`: Custom builder for plus button
+- `removeIconBuilder`: Custom builder for remove icon
+
+## Example
+
+See `example/lib/main.dart` for a complete demo.

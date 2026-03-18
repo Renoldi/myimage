@@ -49,17 +49,24 @@ class _MyimageDemoState extends State<MyimageDemo> {
             images: _profileImages,
             maxImages: 1,
             onImagesChanged: (results) {
-              setState(
-                () => _profileImages = List<MyimageResult>.from(results),
+              setState(() => _profileImages = results);
+              // Debug print for troubleshooting
+              print(
+                'Profile image changed: ${results.map((r) => r.link).toList()}',
               );
             },
             isDoc: true,
+            isDirectUpload: true,
+            uploadUrl:
+                'https://catbox.moe/user/api.php', // Direct image upload endpoint
+            uploadToken: '', // catbox.moe does not require token
           ),
           if (_profileImages.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text('Selected profile image:'),
             Image.file(File(_profileImages[0].path), height: 100),
             Text('Base64: ${_profileImages[0].base64?.substring(0, 20)}...'),
+            Text('Link: ${_profileImages[0].link}...'),
           ],
           const Divider(height: 40, thickness: 2),
           Text(
@@ -70,7 +77,7 @@ class _MyimageDemoState extends State<MyimageDemo> {
           MyImage(
             images: _multiImages,
             onImagesChanged: (results) {
-              setState(() => _multiImages = List<MyimageResult>.from(results));
+              setState(() => _multiImages = results);
             },
             isDoc: true,
           ),
@@ -110,7 +117,7 @@ class _MyimageDemoState extends State<MyimageDemo> {
           MyImage(
             images: _customImages,
             onImagesChanged: (results) {
-              setState(() => _customImages = List<MyimageResult>.from(results));
+              setState(() => _customImages = results);
             },
             isDoc: true,
             maxImages: null, // unlimited
