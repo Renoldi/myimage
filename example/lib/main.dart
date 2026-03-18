@@ -59,10 +59,10 @@ class _MyimageDemoState extends State<MyimageDemo> {
               );
             },
             isDoc: true,
-            isDirectUpload: true,
-            uploadUrl:
-                'https://catbox.moe/user/api.php', // Direct image upload endpoint
-            uploadToken: '', // catbox.moe does not require token
+            // isDirectUpload: true,
+            // uploadUrl:
+            //     'https://catbox.moe/user/api.php', // Direct image upload endpoint
+            // uploadToken: '', // catbox.moe does not require token
           ),
           if (_profileImages.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -188,7 +188,6 @@ class _MyimageDemoState extends State<MyimageDemo> {
               ),
             ),
           ],
-          const SizedBox(height: 32), // Extra space to prevent overflow
           const SizedBox(height: 32), // Extra space to prevent overflow
           const Divider(height: 40, thickness: 2),
           Text(

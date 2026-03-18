@@ -105,9 +105,7 @@ class _MyImageState extends State<MyImage> {
                                           0,
                                         ),
                                       )
-                                    : (!widget.isDirectUpload &&
-                                              (widget.uploadUrl == null ||
-                                                  widget.uploadUrl!.isEmpty)
+                                    : (!widget.isDirectUpload
                                           ? Container(
                                               width: 120,
                                               height: 120,
@@ -116,9 +114,12 @@ class _MyImageState extends State<MyImage> {
                                                 shape: BoxShape.circle,
                                               ),
                                               child: ClipOval(
-                                                child: Image.asset(
-                                                  'assets/default_image.png',
-                                                  fit: BoxFit.cover,
+                                                child: Center(
+                                                  child: Icon(
+                                                    Icons.image_not_supported,
+                                                    size: 48,
+                                                    color: Colors.grey,
+                                                  ),
                                                 ),
                                               ),
                                             )
