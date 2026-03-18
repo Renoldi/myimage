@@ -82,7 +82,6 @@ class _MyimageDemoState extends State<MyimageDemo> {
             onImagesChanged: (results) {
               setState(() => _multiImages = results);
             },
-            isDoc: true,
             isDirectUpload: true,
             uploadUrl:
                 // "",
@@ -127,7 +126,6 @@ class _MyimageDemoState extends State<MyimageDemo> {
             onImagesChanged: (results) {
               setState(() => _customImages = results);
             },
-            isDoc: true,
             maxImages: null, // unlimited
             plusBuilder: (context) => Container(
               width: 100,

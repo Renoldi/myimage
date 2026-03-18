@@ -347,87 +347,87 @@ class _MyImageState extends State<MyImage> {
     final messenger = mountedBeforeDialog
         ? ScaffoldMessenger.of(context)
         : null;
-    final source = await showModalBottomSheet<String>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (dialogContext) {
-        return SafeArea(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              GestureDetector(
-                onTap: () => Navigator.pop(dialogContext, 'camera'),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    shape: BoxShape.circle,
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: const Icon(
-                    Icons.camera_alt,
-                    size: 32,
-                    color: Colors.blue,
-                  ),
-                ),
-              ),
-              GestureDetector(
-                onTap: () => Navigator.pop(dialogContext, 'gallery'),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    shape: BoxShape.circle,
-                  ),
-                  padding: const EdgeInsets.all(16),
-                  child: const Icon(
-                    Icons.photo_library,
-                    size: 32,
-                    color: Colors.green,
-                  ),
-                ),
-              ),
-              if (widget.isDoc)
-                GestureDetector(
-                  onTap: () => Navigator.pop(dialogContext, 'doc'),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(16),
-                    child: const Icon(
-                      Icons.document_scanner,
-                      size: 32,
-                      color: Colors.deepOrange,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-    if (!mounted) return;
-    if (source == null) return;
     File? file;
-    if (source == 'camera' || source == 'gallery') {
-      final picker = ImagePicker();
-      final picked = await picker.pickImage(
-        source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
-      );
-      if (!mounted) return;
-      if (picked != null) {
-        file = File(picked.path);
-      }
-    } else if (source == 'doc') {
+    String? source;
+    // If isDirectUpload, call CunningDocumentScanner directly
+    if (widget.isDirectUpload) {
       final scanned = await CunningDocumentScanner.getPictures(
         isGalleryImportAllowed: true,
         noOfPages: 1,
+        iosScannerOptions: IosScannerOptions(
+          imageFormat: IosImageFormat.jpg,
+          jpgCompressionQuality: 0.5,
+        ),
       );
       if (!mounted) return;
       if (scanned != null && scanned.isNotEmpty) {
         file = File(scanned.first);
+      }
+    } else {
+      source = await showModalBottomSheet<String>(
+        context: context,
+        backgroundColor: Colors.transparent,
+        builder: (dialogContext) {
+          return ClipRRect(
+            // borderRadius: const BorderRadius.vertical(
+            //   top: Radius.circular(16),
+            // ),
+            child: Material(
+              color: Colors.transparent,
+              child: SafeArea(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(dialogContext, 'camera'),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 24),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: const Icon(
+                          Icons.camera_alt,
+                          size: 32,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(dialogContext, 'gallery'),
+                      child: Container(
+                        margin: const EdgeInsets.only(left: 24),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          shape: BoxShape.circle,
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: const Icon(
+                          Icons.photo_library,
+                          size: 32,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      );
+      if (!mounted) return;
+      if (source == null) return;
+      if (source == 'camera' || source == 'gallery') {
+        final picker = ImagePicker();
+        final picked = await picker.pickImage(
+          source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
+        );
+        if (!mounted) return;
+        if (picked != null) {
+          file = File(picked.path);
+        }
       }
     }
     if (!mounted) return;
