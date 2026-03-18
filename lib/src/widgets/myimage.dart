@@ -430,14 +430,12 @@ class _MyImageState extends State<MyImage> {
       }
       widget.onImagesChanged?.call(List<MyimageResult>.from(provider.images));
       if (widget.isDirectUpload && uploadIdx != null) {
-        setState(() {
-          _uploadingIndex = uploadIdx;
-        });
+        _uploadingIndex = uploadIdx;
+        provider.commit();
         await _uploadImageDio(messenger, provider, result, uploadIdx);
         if (!mounted) return;
-        setState(() {
-          _uploadingIndex = null;
-        });
+        _uploadingIndex = null;
+        provider.commit();
       }
     }
   }
