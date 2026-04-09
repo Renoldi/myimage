@@ -2,13 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cunning_document_scanner/cunning_document_scanner.dart';
+import 'package:myimage/src/controllers/myimage_controller.dart';
 import 'package:myimage/src/dio_util.dart';
 import 'package:myimage/models/myimage_result.dart';
 import 'package:provider/provider.dart';
 import '../providers/myimage_provider.dart';
 
 class MyImage extends StatefulWidget {
-  final List<MyimageResult> images;
+  final MyImageController? controller;
+  final List<MyimageResult>? images;
   final void Function(List<MyimageResult> results)? onImagesChanged;
   final String? label;
   final bool isDoc;
@@ -29,7 +31,8 @@ class MyImage extends StatefulWidget {
 
   MyImage({
     super.key,
-    required this.images,
+    this.controller,
+    this.images,
     this.onImagesChanged,
     this.label,
     this.isDoc = false,
@@ -58,13 +61,39 @@ class MyImage extends StatefulWidget {
 class _MyImageState extends State<MyImage> {
   late MyimageProvider _provider;
   int? _uploadingIndex;
+  MyImageController? _controller;
 
   @override
   void initState() {
     super.initState();
     _provider = MyimageProvider();
-    _provider.setImages(widget.images);
+    if (widget.controller != null) {
+      _controller = widget.controller;
+      _provider.setImages(_controller!.images);
+      _controller!.addListener(_onControllerChanged);
+    } else if (widget.images != null) {
+      _controller = null;
+      _provider.setImages(widget.images!);
+    } else {
+      _controller = MyImageController();
+      _provider.setImages(_controller!.images);
+      _controller!.addListener(_onControllerChanged);
+    }
     _uploadingIndex = null;
+  }
+
+  @override
+  void dispose() {
+    _controller?.removeListener(_onControllerChanged);
+    super.dispose();
+  }
+
+  void _onControllerChanged() {
+    if (_controller != null) {
+      setState(() {
+        _provider.setImages(_controller!.images);
+      });
+    }
   }
 
   @override
@@ -99,8 +128,8 @@ class _MyImageState extends State<MyImage> {
                                           context,
                                           MyimageResult(
                                             path: '',
-                                            base64: null,
-                                            link: null,
+                                            base64: "",
+                                            link: "",
                                           ),
                                           0,
                                         ),
@@ -154,13 +183,12 @@ class _MyImageState extends State<MyImage> {
                                           0,
                                         ),
                                       )
-                                    : provider.images[0].link != null &&
-                                          provider.images[0].link!.isNotEmpty
+                                    : provider.images[0].link.isNotEmpty
                                     ? CircleAvatar(
                                         radius: 60,
                                         backgroundColor: Colors.grey.shade300,
                                         backgroundImage: NetworkImage(
-                                          provider.images[0].link!,
+                                          provider.images[0].link,
                                         ),
                                       )
                                     : CircleAvatar(
@@ -249,12 +277,31 @@ class _MyImageState extends State<MyImage> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(result.path),
-                  height: 100,
-                  width: 100,
-                  fit: BoxFit.cover,
-                ),
+                child:
+                    (result.link.trim().isNotEmpty &&
+                        Uri.tryParse(result.link)?.hasAbsolutePath == true)
+                    ? Image.network(
+                        result.link,
+                        height: 100,
+                        width: 100,
+                        fit: BoxFit.cover,
+                      )
+                    : (result.path.trim().isNotEmpty
+                          ? Image.file(
+                              File(result.path),
+                              height: 100,
+                              width: 100,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              width: 100,
+                              height: 100,
+                              color: Colors.grey[300],
+                              child: const Icon(
+                                Icons.broken_image,
+                                color: Colors.grey,
+                              ),
+                            )),
               ),
               if (images.isNotEmpty &&
                   uploadProgress.length > idx &&
@@ -522,8 +569,8 @@ class _MyImageState extends State<MyImage> {
         } else if (data is Map) {
           uploadedLink = data['url'] as String?;
         }
-        if (uploadedLink != null && uploadedLink.isNotEmpty) {
-          downloadedPath = await DioUtil.downloadFile(uploadedLink);
+        if ((uploadedLink ?? '').isNotEmpty) {
+          downloadedPath = await DioUtil.downloadFile(uploadedLink!);
         }
         provider.updateImage(
           index,
