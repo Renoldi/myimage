@@ -10,7 +10,6 @@ import '../providers/myimage_provider.dart';
 
 class MyImage extends StatefulWidget {
   final MyImageController? controller;
-  final List<MyimageResult>? images;
   final void Function(List<MyimageResult> results)? onImagesChanged;
   final String? label;
   final bool isDoc;
@@ -32,7 +31,6 @@ class MyImage extends StatefulWidget {
   MyImage({
     super.key,
     this.controller,
-    this.images,
     this.onImagesChanged,
     this.label,
     this.isDoc = false,
@@ -71,9 +69,6 @@ class _MyImageState extends State<MyImage> {
       _controller = widget.controller;
       _provider.setImages(_controller!.images);
       _controller!.addListener(_onControllerChanged);
-    } else if (widget.images != null) {
-      _controller = null;
-      _provider.setImages(widget.images!);
     } else {
       _controller = MyImageController();
       _provider.setImages(_controller!.images);
