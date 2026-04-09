@@ -28,6 +28,8 @@ class MyImage extends StatefulWidget {
   final String uploadFailedMessage;
   final String uploadErrorMessage;
 
+  final bool allow;
+
   MyImage({
     super.key,
     this.controller,
@@ -45,6 +47,7 @@ class MyImage extends StatefulWidget {
     this.uploadSuccessMessage = 'Upload successful!',
     this.uploadFailedMessage = 'Upload failed:',
     this.uploadErrorMessage = 'Upload error:',
+    this.allow = true,
   }) {
     assert(
       isDirectUpload == false || (uploadUrl != null && uploadUrl!.isNotEmpty),
@@ -105,7 +108,9 @@ class _MyImageState extends State<MyImage> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 32),
                     child: GestureDetector(
-                      onTap: () => _pickImage(context, provider),
+                      onTap: widget.allow
+                          ? () => _pickImage(context, provider)
+                          : null,
                       child: Stack(
                         key: ValueKey(
                           provider.uploadProgress.isNotEmpty
@@ -359,7 +364,7 @@ class _MyImageState extends State<MyImage> {
       } else {
         widgets.add(
           GestureDetector(
-            onTap: () => _pickImage(context, provider),
+            onTap: widget.allow ? () => _pickImage(context, provider) : null,
             child: widget.plusBuilder != null
                 ? widget.plusBuilder!(context)
                 : Container(

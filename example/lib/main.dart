@@ -77,6 +77,7 @@ class _MyimageDemoState extends State<MyimageDemo> {
               setState(() {});
             },
             maxImages: 5,
+            allow: false,
             imageBuilder: (context, image, index) {
               return (image.link.trim().isNotEmpty &&
                       Uri.tryParse(image.link)?.hasAbsolutePath == true)
