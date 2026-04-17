@@ -365,12 +365,16 @@ class _MyImageState extends State<MyImage> {
                 top: 0,
                 right: 0,
                 child: _buildRemoveButton(context, idx, images[idx], () {
+                  final removed = images[idx];
                   provider.removeImage(idx);
+                  // Sinkronkan controller eksternal sebelum callback
                   if (widget.controller != null) {
                     widget.controller!.images = List<MyimageResult>.from(
                       provider.images,
                     );
                   }
+                  // Panggil onRemoveImage jika ada
+                  widget.onRemoveImage?.call(idx, removed);
                   widget.onImagesChanged?.call(
                     List<MyimageResult>.from(provider.images),
                   );

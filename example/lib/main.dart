@@ -76,9 +76,6 @@ class _MyimageDemoState extends State<MyimageDemo> {
           const SizedBox(height: 8),
           MyImage(
             controller: _networkImagesController,
-            onImagesChanged: (results) {
-              setState(() {});
-            },
             maxImages: 5,
             allow: false,
             imageBuilder: (context, image, index) {
@@ -110,56 +107,69 @@ class _MyimageDemoState extends State<MyimageDemo> {
             onRemoveImage: (index, image) => logger.i(
               'Removed image at index $index: ${image.link.isNotEmpty ? image.link : image.path}',
             ),
-            onImageChanged: (image) => logger.i(
-              'Image changed: ${image.link.isNotEmpty ? image.link : image.path}',
+            onImagesChanged: (images) => logger.i(
+              'Images changed: ${images.map((image) => image.link.isNotEmpty ? image.link : image.path).join(', ')}',
             ),
           ),
-          if (_networkImagesController.images.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            const Text('Default network images:'),
-            SizedBox(
-              height: 120,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: _networkImagesController.images.length,
-                itemBuilder: (context, idx) {
-                  final result = _networkImagesController.images[idx];
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child:
-                          (result.link.trim().isNotEmpty &&
-                              Uri.tryParse(result.link)?.hasAbsolutePath ==
-                                  true)
-                          ? Image.network(
-                              result.link,
-                              height: 100,
-                              width: 100,
-                              fit: BoxFit.cover,
-                            )
-                          : (result.path.trim().isNotEmpty
-                                ? Image.file(
-                                    File(result.path),
+          AnimatedBuilder(
+            animation: _networkImagesController,
+            builder: (context, _) {
+              if (_networkImagesController.images.isEmpty) {
+                return SizedBox.shrink();
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  const Text('Default network images:'),
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _networkImagesController.images.length,
+                      itemBuilder: (context, idx) {
+                        final result = _networkImagesController.images[idx];
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child:
+                                (result.link.trim().isNotEmpty &&
+                                    Uri.tryParse(
+                                          result.link,
+                                        )?.hasAbsolutePath ==
+                                        true)
+                                ? Image.network(
+                                    result.link,
                                     height: 100,
                                     width: 100,
                                     fit: BoxFit.cover,
                                   )
-                                : Container(
-                                    width: 100,
-                                    height: 100,
-                                    color: Colors.grey[300],
-                                    child: const Icon(
-                                      Icons.broken_image,
-                                      color: Colors.grey,
-                                    ),
-                                  )),
+                                : (result.path.trim().isNotEmpty
+                                      ? Image.file(
+                                          File(result.path),
+                                          height: 100,
+                                          width: 100,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Container(
+                                          width: 100,
+                                          height: 100,
+                                          color: Colors.grey[300],
+                                          child: const Icon(
+                                            Icons.broken_image,
+                                            color: Colors.grey,
+                                          ),
+                                        )),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
+                  ),
+                ],
+              );
+            },
+          ),
           const Divider(height: 40, thickness: 2),
           const Text(
             'MyImage with 2 Default Asset Images',
