@@ -178,10 +178,16 @@ class _MyimageDemoState extends State<MyimageDemo> {
           const SizedBox(height: 8),
           MyImage(
             controller: _assetImagesController,
-            onImagesChanged: (results) {
-              setState(() {});
-            },
             maxImages: 5,
+            onRemoveImage: (index, image) => logger.i(
+              'Removed image at index $index: ${image.link.isNotEmpty ? image.link : image.path}',
+            ),
+            onImagesChanged: (images) {
+              setState(() {});
+              logger.i(
+                'Images changed: ${images.map((image) => image.link.isNotEmpty ? image.link : image.path).join(', ')}',
+              );
+            },
           ),
           if (_assetImagesController.images.isNotEmpty) ...[
             const SizedBox(height: 8),
