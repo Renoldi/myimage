@@ -10,7 +10,13 @@ import '../providers/myimage_provider.dart';
 
 class MyImage extends StatefulWidget {
   final MyImageController? controller;
+
+  /// Callback untuk perubahan daftar gambar (multi-image, kompatibilitas lama)
   final void Function(List<MyimageResult> results)? onImagesChanged;
+
+  /// Callback untuk perubahan gambar pada mode single image (maxImages == 1)
+  /// Dipanggil setiap kali gambar dipilih atau diganti.
+  final void Function(MyimageResult image)? onImageChanged;
   final String? label;
   final bool isDoc;
   final int? maxImages;
@@ -18,6 +24,9 @@ class MyImage extends StatefulWidget {
   imageBuilder;
   final Widget Function(BuildContext context, int index, MyimageResult image)?
   removeIconBuilder;
+
+  /// Callback saat gambar dihapus.
+  /// Pada mode single image, index selalu 0.
   final void Function(int index, MyimageResult image)? onRemoveImage;
   final Widget Function(BuildContext context)? plusBuilder;
   final String? uploadUrl;
@@ -34,6 +43,7 @@ class MyImage extends StatefulWidget {
     super.key,
     this.controller,
     this.onImagesChanged,
+    this.onImageChanged,
     this.label,
     this.isDoc = false,
     this.maxImages,
@@ -107,139 +117,7 @@ class _MyImageState extends State<MyImage> {
                 if (widget.maxImages == 1)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 32),
-                    child: GestureDetector(
-                      onTap: widget.allow
-                          ? () => _pickImage(context, provider)
-                          : null,
-                      child: Stack(
-                        key: ValueKey(
-                          provider.uploadProgress.isNotEmpty
-                              ? provider.uploadProgress[0]
-                              : 0.0,
-                        ),
-                        alignment: Alignment.center,
-                        children: [
-                          provider.images.isEmpty
-                              ? (widget.imageBuilder != null
-                                    ? SizedBox(
-                                        width: 120,
-                                        height: 120,
-                                        child: widget.imageBuilder!(
-                                          context,
-                                          MyimageResult(
-                                            path: '',
-                                            base64: "",
-                                            link: "",
-                                          ),
-                                          0,
-                                        ),
-                                      )
-                                    : (!widget.isDirectUpload
-                                          ? Container(
-                                              width: 120,
-                                              height: 120,
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey.shade300,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: ClipOval(
-                                                child: Center(
-                                                  child: Icon(
-                                                    Icons.image_not_supported,
-                                                    size: 48,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                              ),
-                                            )
-                                          : CircleAvatar(
-                                              radius: 60,
-                                              backgroundColor:
-                                                  Colors.grey.shade300,
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: const [
-                                                  Icon(
-                                                    Icons.person,
-                                                    size: 60,
-                                                    color: Colors.grey,
-                                                  ),
-                                                  Icon(
-                                                    Icons.camera_alt,
-                                                    size: 24,
-                                                    color: Colors.black54,
-                                                  ),
-                                                ],
-                                              ),
-                                            )))
-                              : (widget.imageBuilder != null
-                                    ? SizedBox(
-                                        width: 120,
-                                        height: 120,
-                                        child: widget.imageBuilder!(
-                                          context,
-                                          provider.images[0],
-                                          0,
-                                        ),
-                                      )
-                                    : provider.images[0].link.isNotEmpty
-                                    ? CircleAvatar(
-                                        radius: 60,
-                                        backgroundColor: Colors.grey.shade300,
-                                        backgroundImage: NetworkImage(
-                                          provider.images[0].link,
-                                        ),
-                                      )
-                                    : CircleAvatar(
-                                        radius: 60,
-                                        backgroundColor: Colors.grey.shade300,
-                                        backgroundImage: FileImage(
-                                          File(provider.images[0].path),
-                                        ),
-                                      )),
-                          if (provider.images.isNotEmpty &&
-                              provider.uploadProgress.isNotEmpty &&
-                              provider.uploadProgress[0] > 0.0 &&
-                              provider.uploadProgress[0] < 1.0 &&
-                              !widget.isDirectUpload)
-                            Positioned(
-                              top: 2,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                width: 96,
-                                height: 24,
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withValues(alpha: .35),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: Colors.deepOrange,
-                                    width: 2,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black38,
-                                      blurRadius: 6,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: LinearProgressIndicator(
-                                  value: provider.uploadProgress[0],
-                                  backgroundColor: Colors.grey.shade300,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.deepOrange,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
+                    child: _buildSingleImageWidget(context, provider),
                   ),
                 if (widget.maxImages != 1)
                   Column(
@@ -260,6 +138,175 @@ class _MyImageState extends State<MyImage> {
     );
   }
 
+  Widget _buildSingleImageWidget(
+    BuildContext context,
+    MyimageProvider provider,
+  ) {
+    final hasImage = provider.images.isNotEmpty;
+    return Stack(
+      children: [
+        GestureDetector(
+          onTap: widget.allow ? () => _pickImage(context, provider) : null,
+          child: Stack(
+            key: ValueKey(
+              provider.uploadProgress.isNotEmpty
+                  ? provider.uploadProgress[0]
+                  : 0.0,
+            ),
+            alignment: Alignment.center,
+            children: [
+              _buildImageDisplay(
+                context,
+                hasImage ? provider.images[0] : null,
+                0,
+                isSingle: true,
+              ),
+              if (hasImage &&
+                  provider.uploadProgress.isNotEmpty &&
+                  provider.uploadProgress[0] > 0.0 &&
+                  provider.uploadProgress[0] < 1.0 &&
+                  !widget.isDirectUpload)
+                Positioned(
+                  top: 2,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    width: 96,
+                    height: 24,
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(.35),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.deepOrange, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black38,
+                          blurRadius: 6,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: LinearProgressIndicator(
+                      value: provider.uploadProgress[0],
+                      backgroundColor: Colors.grey.shade300,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.deepOrange,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (hasImage)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: _buildRemoveButton(context, 0, provider.images[0], () {
+              final removed = provider.images[0];
+              provider.removeImage(0);
+              // Panggil onRemoveImage lebih awal
+              widget.onRemoveImage?.call(0, removed);
+              // Sinkronkan controller eksternal jika ada
+              if (widget.controller != null) {
+                widget.controller!.images = List<MyimageResult>.from(
+                  provider.images,
+                );
+              }
+              widget.onImagesChanged?.call(
+                List<MyimageResult>.from(provider.images),
+              );
+              widget.onImageChanged?.call(MyimageResult());
+            }),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildImageDisplay(
+    BuildContext context,
+    MyimageResult? image,
+    int index, {
+    bool isSingle = false,
+  }) {
+    if (image == null) {
+      if (widget.imageBuilder != null) {
+        return SizedBox(
+          width: 120,
+          height: 120,
+          child: widget.imageBuilder!(context, MyimageResult(), index),
+        );
+      }
+      if (!widget.isDirectUpload) {
+        return Container(
+          width: 120,
+          height: 120,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            shape: BoxShape.circle,
+          ),
+          child: ClipOval(
+            child: Center(
+              child: Icon(
+                Icons.image_not_supported,
+                size: 48,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+        );
+      }
+      return CircleAvatar(
+        radius: 60,
+        backgroundColor: Colors.grey.shade300,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.person, size: 60, color: Colors.grey),
+            Icon(Icons.camera_alt, size: 24, color: Colors.black54),
+          ],
+        ),
+      );
+    }
+    if (widget.imageBuilder != null) {
+      return SizedBox(
+        width: 120,
+        height: 120,
+        child: widget.imageBuilder!(context, image, index),
+      );
+    }
+    if (image.link.isNotEmpty) {
+      return CircleAvatar(
+        radius: 60,
+        backgroundColor: Colors.grey.shade300,
+        backgroundImage: NetworkImage(image.link),
+      );
+    }
+    return CircleAvatar(
+      radius: 60,
+      backgroundColor: Colors.grey.shade300,
+      backgroundImage: FileImage(File(image.path)),
+    );
+  }
+
+  Widget _buildRemoveButton(
+    BuildContext context,
+    int index,
+    MyimageResult image,
+    VoidCallback onRemove,
+  ) {
+    if (widget.removeIconBuilder != null) {
+      return GestureDetector(
+        onTap: onRemove,
+        child: widget.removeIconBuilder!(context, index, image),
+      );
+    }
+    return IconButton(
+      icon: const Icon(Icons.close, color: Colors.red),
+      onPressed: onRemove,
+    );
+  }
+
   List<Widget> _buildMultiImageWidgets(
     BuildContext context,
     MyimageProvider provider,
@@ -270,38 +317,17 @@ class _MyImageState extends State<MyImage> {
     final max = widget.maxImages ?? images.length + 1;
     for (int idx = 0; idx < max; idx++) {
       if (idx < images.length) {
-        final result = images[idx];
         widgets.add(
           Stack(
             alignment: Alignment.center,
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child:
-                    (result.link.trim().isNotEmpty &&
-                        Uri.tryParse(result.link)?.hasAbsolutePath == true)
-                    ? Image.network(
-                        result.link,
-                        height: 100,
-                        width: 100,
-                        fit: BoxFit.cover,
-                      )
-                    : (result.path.trim().isNotEmpty
-                          ? Image.file(
-                              File(result.path),
-                              height: 100,
-                              width: 100,
-                              fit: BoxFit.cover,
-                            )
-                          : Container(
-                              width: 100,
-                              height: 100,
-                              color: Colors.grey[300],
-                              child: const Icon(
-                                Icons.broken_image,
-                                color: Colors.grey,
-                              ),
-                            )),
+                child: SizedBox(
+                  width: 100,
+                  height: 100,
+                  child: _buildImageDisplay(context, images[idx], idx),
+                ),
               ),
               if (images.isNotEmpty &&
                   uploadProgress.length > idx &&
@@ -314,7 +340,7 @@ class _MyImageState extends State<MyImage> {
                       width: 80,
                       height: 16,
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.35),
+                        color: Colors.black.withOpacity(0.35),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(color: Colors.deepOrange, width: 2),
                         boxShadow: [
@@ -338,25 +364,17 @@ class _MyImageState extends State<MyImage> {
               Positioned(
                 top: 0,
                 right: 0,
-                child: widget.removeIconBuilder != null
-                    ? GestureDetector(
-                        onTap: () {
-                          provider.removeImage(idx);
-                          widget.onImagesChanged?.call(
-                            List<MyimageResult>.from(provider.images),
-                          );
-                        },
-                        child: widget.removeIconBuilder!(context, idx, result),
-                      )
-                    : IconButton(
-                        icon: const Icon(Icons.close, color: Colors.red),
-                        onPressed: () {
-                          provider.removeImage(idx);
-                          widget.onImagesChanged?.call(
-                            List<MyimageResult>.from(provider.images),
-                          );
-                        },
-                      ),
+                child: _buildRemoveButton(context, idx, images[idx], () {
+                  provider.removeImage(idx);
+                  if (widget.controller != null) {
+                    widget.controller!.images = List<MyimageResult>.from(
+                      provider.images,
+                    );
+                  }
+                  widget.onImagesChanged?.call(
+                    List<MyimageResult>.from(provider.images),
+                  );
+                }),
               ),
             ],
           ),
@@ -491,12 +509,23 @@ class _MyImageState extends State<MyImage> {
         if (isNew) {
           provider.setUploadProgress(0, 0.0);
         }
+        // Pastikan controller eksternal sinkron sebelum callback
+        if (widget.controller != null) {
+          widget.controller!.images = List<MyimageResult>.from(provider.images);
+        }
+        // Callback khusus single image
+        widget.onImagesChanged?.call(List<MyimageResult>.from(provider.images));
+        widget.onImageChanged?.call(result);
       } else if (widget.maxImages == null) {
         provider.addImage(result);
         uploadIdx = provider.images.length - 1;
         if (provider.uploadProgress.length < provider.images.length) {
           provider.setUploadProgress(provider.images.length - 1, 0.0);
         }
+        if (widget.controller != null) {
+          widget.controller!.images = List<MyimageResult>.from(provider.images);
+        }
+        widget.onImagesChanged?.call(List<MyimageResult>.from(provider.images));
       } else {
         if (provider.images.length < widget.maxImages!) {
           provider.addImage(result);
@@ -504,9 +533,16 @@ class _MyImageState extends State<MyImage> {
           if (provider.uploadProgress.length < provider.images.length) {
             provider.setUploadProgress(provider.images.length - 1, 0.0);
           }
+          if (widget.controller != null) {
+            widget.controller!.images = List<MyimageResult>.from(
+              provider.images,
+            );
+          }
+          widget.onImagesChanged?.call(
+            List<MyimageResult>.from(provider.images),
+          );
         }
       }
-      widget.onImagesChanged?.call(List<MyimageResult>.from(provider.images));
       if (widget.isDirectUpload && uploadIdx != null) {
         _uploadingIndex = uploadIdx;
         provider.commit();

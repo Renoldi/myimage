@@ -59,6 +59,9 @@ class _MyimageDemoState extends State<MyimageDemo> {
   final MyImageController _customController = MyImageController();
   final MyImageController _customsController = MyImageController();
 
+  String? _singleImageLog;
+  String? _singleRemoveLog;
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -104,6 +107,12 @@ class _MyimageDemoState extends State<MyimageDemo> {
                             ),
                           ));
             },
+            onRemoveImage: (index, image) => logger.i(
+              'Removed image at index $index: ${image.link.isNotEmpty ? image.link : image.path}',
+            ),
+            onImageChanged: (image) => logger.i(
+              'Image changed: ${image.link.isNotEmpty ? image.link : image.path}',
+            ),
           ),
           if (_networkImagesController.images.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -222,10 +231,38 @@ class _MyimageDemoState extends State<MyimageDemo> {
                 logger.i(r.toString());
               }
             },
+            onImageChanged: (image) {
+              setState(() {
+                _singleImageLog =
+                    'onImageChanged: ${image.path.isNotEmpty ? image.path : image.link}';
+              });
+            },
+            onRemoveImage: (idx, image) {
+              setState(() {
+                _singleRemoveLog =
+                    'onRemoveImage: index=$idx, path=${image.path}';
+              });
+            },
             isDoc: true,
             isDirectUpload: true,
             uploadUrl: 'https://catbox.moe/user/api.php',
           ),
+          if (_singleImageLog != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 2),
+              child: Text(
+                _singleImageLog!,
+                style: TextStyle(color: Colors.green),
+              ),
+            ),
+          if (_singleRemoveLog != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                _singleRemoveLog!,
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
           if (_profileController.images.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text('Selected profile image:'),
@@ -255,6 +292,18 @@ class _MyimageDemoState extends State<MyimageDemo> {
             controller: _customsController,
             onImagesChanged: (results) {
               setState(() {});
+            },
+            onImageChanged: (image) {
+              setState(() {
+                _singleImageLog =
+                    'onImageChanged: ${image.path.isNotEmpty ? image.path : image.link}';
+              });
+            },
+            onRemoveImage: (idx, image) {
+              setState(() {
+                _singleRemoveLog =
+                    'onRemoveImage: index=$idx, path=${image.path}';
+              });
             },
             isDoc: true,
             maxImages: 1,
@@ -323,6 +372,22 @@ class _MyimageDemoState extends State<MyimageDemo> {
               );
             },
           ),
+          if (_singleImageLog != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 2),
+              child: Text(
+                _singleImageLog!,
+                style: TextStyle(color: Colors.green),
+              ),
+            ),
+          if (_singleRemoveLog != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                _singleRemoveLog!,
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
           if (_customsController.images.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text('Selected images:'),
